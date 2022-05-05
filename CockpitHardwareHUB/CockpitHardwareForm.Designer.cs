@@ -459,9 +459,9 @@ namespace CockpitHardwareHUB
             this.grpLogging.Controls.Add(this.dgvLogging);
             this.grpLogging.Controls.Add(this.btnLoggingClear);
             this.grpLogging.Controls.Add(this.cbLoggingEnabled);
-            this.grpLogging.Location = new System.Drawing.Point(303, 355);
+            this.grpLogging.Location = new System.Drawing.Point(305, 355);
             this.grpLogging.Name = "grpLogging";
-            this.grpLogging.Size = new System.Drawing.Size(717, 233);
+            this.grpLogging.Size = new System.Drawing.Size(715, 233);
             this.grpLogging.TabIndex = 18;
             this.grpLogging.TabStop = false;
             this.grpLogging.Text = "Logging";

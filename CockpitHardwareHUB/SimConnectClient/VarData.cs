@@ -133,7 +133,6 @@ namespace CockpitHardwareHUB
             // Keep the original variable name for comparison reasons
             // Example: FLOAT64_RW_A:AUTOPILOT ALTITUDE LOCK VAR:3,feet
             _sVar = sVar;
-            sVar = sVar.ToUpper();
 
             // Extract ValType
             if (new Regex(@"^VOID_[ALKX]:.+$", RegexOptions.IgnoreCase).IsMatch(sVar))
@@ -153,8 +152,8 @@ namespace CockpitHardwareHUB
                     _Result = ParseResult.UnsupportedValType;
                     return;
                 }
-                _bRead = (sVar[iUnderscore + 1] == 'R');
-                _bWrite = (sVar[iUnderscore + 1] == 'W' || sVar[iUnderscore + 2] == 'W');
+                _bRead = (char.ToUpper(sVar[iUnderscore + 1]) == 'R');
+                _bWrite = (char.ToUpper(sVar[iUnderscore + 1]) == 'W' || char.ToUpper(sVar[iUnderscore + 2]) == 'W');
             }
             else
             {
@@ -164,14 +163,14 @@ namespace CockpitHardwareHUB
 
             // Extract VarType
             int iColon = sVar.IndexOf(':');
-            _cVarType = sVar[iColon - 1];
+            _cVarType = char.ToUpper(sVar[iColon - 1]);
 
             // Extract the trailing Unit if it exists
             int iComma = sVar.LastIndexOf(',');
             if ((iComma != -1) && (sVar.Length > iComma + 1))
             {
                 // Extract the Unit
-                _sUnit = sVar.Substring(iComma + 1).Trim();
+                _sUnit = sVar.Substring(iComma + 1).Trim().ToUpper();
                 // Avoid that we don't take a part of the variable name that contains a comma
                 // Example: INT32_X:4 (>L:A32NX_EFIS_L_OPTION,enum) (L:A32NX_EFIS_L_OPTION,enum)
                 // The above would return ",enum)", but the ')' character indicates that it's not a Unit, but part of the variable name
@@ -260,7 +259,7 @@ namespace CockpitHardwareHUB
 
         private bool GetValType(string sValType)
         {
-            switch (sValType)
+            switch (sValType.ToUpper())
             {
                 case "INT32":
                     _scValType = SIMCONNECT_DATATYPE.INT32;
