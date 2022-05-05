@@ -14,7 +14,7 @@
 using namespace std;
 
 const char* WASM_Name = "HABI_WASM";
-const char* WASM_Version = "00.01";
+const char* WASM_Version = "00.02";
 
 const char* CLIENT_DATA_NAME_COMMAND = "HW.Command";
 const SIMCONNECT_CLIENT_DATA_ID CLIENT_DATA_ID_COMMAND = 0;
@@ -485,7 +485,7 @@ void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContex
 			}
 			else if (v.VarType == 'X')
 			{
-				if (v.ValAccess != 'R') // [W]rite or [B]oth
+				if (v.ValAccess != 'R' && v.ValType != 'V') // [W]rite or [B]oth and not [V]OID
 				{
 					// Provide buffer for DWORD (max "4294967295") and VarName
 					char s[256 + 10];
@@ -495,7 +495,7 @@ void CALLBACK MyDispatchProc(SIMCONNECT_RECV* pData, DWORD cbData, void* pContex
 					fprintf(stderr, "%s: RECV_EVENT - \"X\": execute_calculator_code(%s)", WASM_Name, s);
 					execute_calculator_code(s, nullptr, nullptr, nullptr);
 				}
-				else // [R]ead
+				else // [R]ead or [V]OID
 				{
 					fprintf(stderr, "%s: RECV_EVENT - \"X\": execute_calculator_code(%s)", WASM_Name, v.Name);
 					execute_calculator_code(v.Name, nullptr, nullptr, nullptr);
