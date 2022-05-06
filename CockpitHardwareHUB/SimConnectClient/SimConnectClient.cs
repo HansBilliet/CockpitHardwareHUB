@@ -531,7 +531,7 @@ namespace CockpitHardwareHUB
 
             if (!_bConnected)
             {
-                _Logger?.Invoke("Not connected", 2);
+                _Logger?.Invoke("Not connected", 0);
                 return false;
             }
 
@@ -539,7 +539,7 @@ namespace CockpitHardwareHUB
             VarData v = Vars.Find(x => x.sVar == sVar);
             if (v != null)
             {
-                _Logger?.Invoke($"Variable \"{sVar}\" already exists", 2);
+                _Logger?.Invoke($"Variable \"{sVar}\" already exists", 0);
 
                 if (!v.IsProcessed)
                     // Variable still not fully processed, some data will still be missing - Invokes will still be issued through the normal process
@@ -559,7 +559,7 @@ namespace CockpitHardwareHUB
 
             if (v.Result != ParseResult.Ok)
             {
-                _Logger?.Invoke($"Command error: {v.Result}", 2);
+                _Logger?.Invoke($"Command error: {v.Result}", 0);
                 return false;
             }
 
@@ -676,19 +676,19 @@ namespace CockpitHardwareHUB
         {
             if (!_bConnected)
             {
-                _Logger?.Invoke("Not connected", 2);
+                _Logger?.Invoke("Not connected", 0);
                 return false;
             }
 
             if (!v.bWrite)
             {
-                _Logger?.Invoke("Variable can not be set", 2);
+                _Logger?.Invoke("Variable can not be set", 0);
                 return false;
             }
 
             if (v.scValType == SIMCONNECT_DATATYPE.INVALID && sValue != "")
             {
-                _Logger?.Invoke("VOID can not have a value", 2);
+                _Logger?.Invoke("VOID can not have a value", 0);
                 return false;
             }
 
@@ -788,13 +788,13 @@ namespace CockpitHardwareHUB
         {
             if (!_bConnected)
             {
-                _Logger?.Invoke("Not connected", 2);
+                _Logger?.Invoke("Not connected", 0);
                 return false;
             }
 
             if (!Vars.Remove(v))
             {
-                _Logger?.Invoke("Remove failed", 2);
+                _Logger?.Invoke("Remove failed", 0);
                 return false;
             }
 
@@ -914,6 +914,8 @@ namespace CockpitHardwareHUB
             {
                 ProcessCmd($"{Vars[0].uUniqueID:D3}-");
             }
+
+            VarData.ResetUniqueID();
         }
     }
 }

@@ -13,6 +13,11 @@ namespace CockpitHardwareHUB
         static private UInt16 uNewDefineID = 0;
         static private UInt16 uNewRequestID = 10;
 
+        static public void ResetUniqueID()
+        { 
+            uNewUniqueID = 1;
+        }
+
         private UInt16 _uDefineID;
         public UInt16 uDefineID { get => _uDefineID; }
 
