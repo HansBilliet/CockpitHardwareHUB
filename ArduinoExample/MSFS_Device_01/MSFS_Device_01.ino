@@ -15,8 +15,9 @@ bool bRegistered = false;
 const long baudrate = 500000;
 
 //const String sIdent = "FCU_COM3\n";
-const String sIdent = "FCU_COM4\n";
+//const String sIdent = "FCU_COM4\n";
 //const String sIdent = "FCU_COM5\n";
+const String sIdent = "FCU A32NX\n";
 
 const String sProcessor = "ARDUINO\n";
 
@@ -25,7 +26,6 @@ const char *Variables[] = {
   "INT32_RW_L:A32NX_EFIS_L_OPTION,enum",                // 001
   "VOID_K:A32NX.FCU_HDG_INC",                           // 002
   "VOID_K:A32NX.FCU_HDG_DEC",                           // 003
-  "INT32_R_L:A32NX_AUTOPILOT_HEADING_SELECTED,Degrees", // 004
   };
 size_t nVariables = sizeof(Variables)/sizeof(Variables[0]);
 

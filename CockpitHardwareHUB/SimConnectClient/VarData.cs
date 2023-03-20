@@ -1,5 +1,6 @@
 ﻿using Microsoft.FlightSimulator.SimConnect;
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace CockpitHardwareHUB
@@ -97,10 +98,12 @@ namespace CockpitHardwareHUB
             {
                 switch (_scValType)
                 {
-                    case SIMCONNECT_DATATYPE.INT32:
-                    case SIMCONNECT_DATATYPE.INT64:
                     case SIMCONNECT_DATATYPE.FLOAT32:
                     case SIMCONNECT_DATATYPE.FLOAT64:
+                        double d = (double)oValue;
+                        return d.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                    case SIMCONNECT_DATATYPE.INT32:
+                    case SIMCONNECT_DATATYPE.INT64:
                         return oValue.ToString();
                     case SIMCONNECT_DATATYPE.STRING8:
                         return ((String8)_oValue).Value;

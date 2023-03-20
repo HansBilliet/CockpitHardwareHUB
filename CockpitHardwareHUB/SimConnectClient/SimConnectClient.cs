@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -44,7 +45,8 @@ namespace CockpitHardwareHUB
         private static bool[] DataAreaVarsUsed = new bool[10];
 
         // Currently we are using fixed size strings of 256 characters
-        private const int MESSAGE_SIZE = 256;
+        //private const int MESSAGE_SIZE = 256;
+        private const int MESSAGE_SIZE = 512; // Change to 512 MESSAGE_SIZE
         //private const uint SIZE_CLIENTAREA_VARS = 8192; //SimConnect.SIMCONNECT_CLIENTDATA_MAX_SIZE;
 
         // Client Area Data ID's
@@ -81,7 +83,8 @@ namespace CockpitHardwareHUB
             public UInt16 DefineID;
             public UInt16 Bank;
             public UInt16 Offset;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+            //[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = MESSAGE_SIZE)] // Change to 512 MESSAGE_SIZE
             public String str;
             public UInt16 EventID;
             public char ValType;
@@ -355,7 +358,7 @@ namespace CockpitHardwareHUB
                     // Register for listening to return value only if required
                     if (vInList.bRead)
                     {
-                        vInList.uBank = ackData.Bank; 
+                        vInList.uBank = ackData.Bank;
                         vInList.uOffset = ackData.Offset;
 
                         switch (ackData.ValType)
@@ -502,7 +505,8 @@ namespace CockpitHardwareHUB
                 return;
             }
 
-            String256 cmd;
+            // String256 cmd;
+            String512 cmd;
             cmd.Value = command;
 
             try

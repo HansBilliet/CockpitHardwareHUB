@@ -46,6 +46,13 @@ namespace CockpitHardwareHUB
         public string Value;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+    public struct String512
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
+        public string Value;
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
     public class DEV_BROADCAST_DEVICEINTERFACE
     {

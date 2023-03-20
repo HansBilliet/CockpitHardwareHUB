@@ -33,7 +33,8 @@ const SIMCONNECT_CLIENT_DATA_DEFINITION_ID DATA_DEFINITION_ID_ACKNOWLEDGE = 1;
 const SIMCONNECT_CLIENT_DATA_DEFINITION_ID DATA_DEFINITION_ID_RESULT = 2;
 const UINT16 START_LVAR_DEFINITION = 10;
 
-const int MESSAGE_SIZE = 256;
+//const int MESSAGE_SIZE = 256;
+const int MESSAGE_SIZE = 512; // Change to 512 MESSAGE_SIZE
 const int EVENT_NAME_SIZE = 32;
 const UINT16 SIZE_CLIENTAREA_VARS = SIMCONNECT_CLIENTDATA_MAX_SIZE;
 
@@ -48,7 +49,7 @@ struct VarData {
 	UINT16 DefineID;
 	UINT16 Bank;
 	UINT16 Offset;
-	char Name[MESSAGE_SIZE];
+	char Name[MESSAGE_SIZE]; // Change to 512 MESSAGE_SIZE
 	UINT16 EventID;
 	char ValType;
 	char ValAccess;
@@ -350,7 +351,8 @@ void RegisterVar(char* sVar, char cVarType, char cValType, char cValAccess)
 
 		// copy the name, limit at 256 characters (including '\0')
 		v.Name[0] = '\0';
-		strncat(v.Name, sVar, 255);
+		//strncat(v.Name, sVar, 255);
+		strncat(v.Name, sVar, MESSAGE_SIZE - 1); // Change to 512 MESSAGE_SIZE
 		fprintf(stderr, "%s: RegisterVar -> v.Name = %s", WASM_Name, v.Name);
 
 		// Create new unique DefineID
