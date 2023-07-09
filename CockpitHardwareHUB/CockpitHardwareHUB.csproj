@@ -79,6 +79,7 @@
     <Compile Include="DeviceServer\COMDevice.cs" />
     <Compile Include="DeviceServer\DeviceServer.cs" />
     <Compile Include="HelperClasses.cs" />
+    <Compile Include="LogFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimConnectClient\SimConnectClient.cs" />

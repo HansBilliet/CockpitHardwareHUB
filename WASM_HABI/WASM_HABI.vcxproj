@@ -142,8 +142,7 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>echo F|xcopy /Y /F "$(TargetPath)" "C:\Users\hansb\Documents\MyFSProjects\HABI_WASM\PackageSources\Copys\home\Module\$(TargetName)$(TargetExt)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -67,7 +67,9 @@ namespace CockpitHardwareHUB
             this.txtVariablesFilter = new System.Windows.Forms.TextBox();
             this.dgvVariables = new System.Windows.Forms.DataGridView();
             this.grpLogging = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.txtLogFile = new System.Windows.Forms.TextBox();
+            this.cbLogToFile = new System.Windows.Forms.CheckBox();
+            this.lblLoggingLevel = new System.Windows.Forms.Label();
             this.cbLogLevel = new System.Windows.Forms.ComboBox();
             this.lblLoggingFilter = new System.Windows.Forms.Label();
             this.txtLoggingFilter = new System.Windows.Forms.TextBox();
@@ -452,7 +454,9 @@ namespace CockpitHardwareHUB
             // 
             // grpLogging
             // 
-            this.grpLogging.Controls.Add(this.label1);
+            this.grpLogging.Controls.Add(this.txtLogFile);
+            this.grpLogging.Controls.Add(this.cbLogToFile);
+            this.grpLogging.Controls.Add(this.lblLoggingLevel);
             this.grpLogging.Controls.Add(this.cbLogLevel);
             this.grpLogging.Controls.Add(this.lblLoggingFilter);
             this.grpLogging.Controls.Add(this.txtLoggingFilter);
@@ -466,14 +470,33 @@ namespace CockpitHardwareHUB
             this.grpLogging.TabStop = false;
             this.grpLogging.Text = "Logging";
             // 
-            // label1
+            // txtLogFile
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(221, 18);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 13);
-            this.label1.TabIndex = 20;
-            this.label1.Text = "Log level:";
+            this.txtLogFile.Location = new System.Drawing.Point(87, 42);
+            this.txtLogFile.Name = "txtLogFile";
+            this.txtLogFile.ReadOnly = true;
+            this.txtLogFile.Size = new System.Drawing.Size(622, 20);
+            this.txtLogFile.TabIndex = 23;
+            // 
+            // cbLogToFile
+            // 
+            this.cbLogToFile.AutoSize = true;
+            this.cbLogToFile.Location = new System.Drawing.Point(9, 45);
+            this.cbLogToFile.Name = "cbLogToFile";
+            this.cbLogToFile.Size = new System.Drawing.Size(72, 17);
+            this.cbLogToFile.TabIndex = 22;
+            this.cbLogToFile.Text = "Log to file";
+            this.cbLogToFile.UseVisualStyleBackColor = true;
+            this.cbLogToFile.CheckedChanged += new System.EventHandler(this.cbLogToFile_CheckedChanged);
+            // 
+            // lblLoggingLevel
+            // 
+            this.lblLoggingLevel.AutoSize = true;
+            this.lblLoggingLevel.Location = new System.Drawing.Point(221, 18);
+            this.lblLoggingLevel.Name = "lblLoggingLevel";
+            this.lblLoggingLevel.Size = new System.Drawing.Size(53, 13);
+            this.lblLoggingLevel.TabIndex = 20;
+            this.lblLoggingLevel.Text = "Log level:";
             // 
             // cbLogLevel
             // 
@@ -485,7 +508,7 @@ namespace CockpitHardwareHUB
             "High"});
             this.cbLogLevel.Location = new System.Drawing.Point(280, 15);
             this.cbLogLevel.Name = "cbLogLevel";
-            this.cbLogLevel.Size = new System.Drawing.Size(121, 21);
+            this.cbLogLevel.Size = new System.Drawing.Size(57, 21);
             this.cbLogLevel.TabIndex = 19;
             this.cbLogLevel.SelectionChangeCommitted += new System.EventHandler(this.cbLogLevel_SelectionChangeCommitted);
             // 
@@ -509,9 +532,9 @@ namespace CockpitHardwareHUB
             // dgvLogging
             // 
             this.dgvLogging.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvLogging.Location = new System.Drawing.Point(6, 41);
+            this.dgvLogging.Location = new System.Drawing.Point(6, 68);
             this.dgvLogging.Name = "dgvLogging";
-            this.dgvLogging.Size = new System.Drawing.Size(703, 185);
+            this.dgvLogging.Size = new System.Drawing.Size(703, 158);
             this.dgvLogging.TabIndex = 0;
             // 
             // btnLoggingClear
@@ -617,8 +640,10 @@ namespace CockpitHardwareHUB
         private System.Windows.Forms.DataGridView dgvLogging;
         private System.Windows.Forms.Button btnDevice;
         private System.Windows.Forms.Button btnSendTest;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblLoggingLevel;
         private System.Windows.Forms.ComboBox cbLogLevel;
+        private System.Windows.Forms.CheckBox cbLogToFile;
+        private System.Windows.Forms.TextBox txtLogFile;
         //private CockpitHardwareForm.CustomDataGridView dgvLogging;
     }
 }

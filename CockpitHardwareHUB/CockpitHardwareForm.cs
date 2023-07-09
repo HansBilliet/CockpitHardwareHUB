@@ -13,6 +13,8 @@ namespace CockpitHardwareHUB
         // Log settings
         private bool _bLoggingEnabled = false;
         private int _iLogLevel = 0;
+        private bool _bLogToFile = false;
+        private FileLogger _fileLogger = new FileLogger();
 
         // Column width in DataGridViews
         private const int wTimeStamp = 80;
@@ -58,6 +60,8 @@ namespace CockpitHardwareHUB
 
             cbLoggingEnabled.Checked = _bLoggingEnabled;
             cbLogLevel.SelectedIndex = _iLogLevel; // Log level: Low
+            cbLogToFile.Checked = _bLogToFile;
+            txtLogFile.Text = _fileLogger.sFileName;
 
             // Initialize SimConnectClient and DeviceServer
             SimConnectClient.Init(OnLogger, DeviceServer.OnSendToDevice, OnConnectStatus, OnVariableUpdate, OnExeResult);
@@ -97,7 +101,8 @@ namespace CockpitHardwareHUB
                 for (int i = 0; i < count; i++)
                 {
                     _LogData.TryDequeue(out LogData LogData);
-                    dtLogLines.Rows.Add(new string[] { LogData.sTimeStamp , LogData.sLogLine  });
+                    dtLogLines.Rows.Add(new string[] { LogData.sTimeStamp, LogData.sLogLine });
+                    _fileLogger.LogLine($"{LogData.sTimeStamp} - {LogData.sLogLine}");
                 }
 
                 if (dtLogLines.Rows.Count > MaxLogLines)
@@ -190,6 +195,7 @@ namespace CockpitHardwareHUB
         {
             DeviceServer.UnRegisterForUsbEvents();
             _Timer.Stop();
+            _fileLogger.CloseFile();
         }
 
         // Override WndProc to install hooks for DeviceServer and SimConnectClient
@@ -449,6 +455,21 @@ namespace CockpitHardwareHUB
             if (txtCommand.Text != "")
                 // for manual entries, we just assume that it is a registered command
                 SimConnectClient.OnSendToMSFS(txtCommand.Text, true);
+        }
+
+        private void cbLogToFile_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbLogToFile.Checked)
+            {
+                if (!_fileLogger.OpenFile())
+                    cbLogToFile.Checked = false;
+            }
+            else
+                _fileLogger.CloseFile();
+
+            txtLogFile.Text = _fileLogger.sFileName;
+
+            _bLogToFile = cbLogToFile.Checked;
         }
     }
 }

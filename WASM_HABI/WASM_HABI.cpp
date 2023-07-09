@@ -14,7 +14,7 @@
 using namespace std;
 
 const char* WASM_Name = "HABI_WASM";
-const char* WASM_Version = "00.02";
+const char* WASM_Version = "00.06"; // Looks like only the debug version is being pushed to MSFS automatically
 
 const char* CLIENT_DATA_NAME_COMMAND = "HW.Command";
 const SIMCONNECT_CLIENT_DATA_ID CLIENT_DATA_ID_COMMAND = 0;
