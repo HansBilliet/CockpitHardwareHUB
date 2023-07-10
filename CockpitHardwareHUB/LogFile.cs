@@ -62,6 +62,14 @@ namespace CockpitHardwareHUB
             }
         }
 
+        public void FlushFile()
+        {
+            if (_bIsOpen)
+            {
+                LogFile.Flush();
+            }
+        }
+
         public void LogLine(string sLogLine)
         {
             if (_bIsOpen)
