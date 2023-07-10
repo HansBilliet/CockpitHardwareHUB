@@ -104,6 +104,7 @@ namespace CockpitHardwareHUB
                     dtLogLines.Rows.Add(new string[] { LogData.sTimeStamp, LogData.sLogLine });
                     _fileLogger.LogLine($"{LogData.sTimeStamp} - {LogData.sLogLine}");
                 }
+                _fileLogger.FlushFile();
 
                 if (dtLogLines.Rows.Count > MaxLogLines)
                     dtLogLines.Rows.RemoveAt(0);
