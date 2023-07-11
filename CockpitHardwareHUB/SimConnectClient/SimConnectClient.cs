@@ -566,6 +566,8 @@ namespace CockpitHardwareHUB
                 _Logger?.Invoke($"Command error: {v.Result}", 0);
                 return false;
             }
+            else
+                _Logger?.Invoke($"Parsing result: scValType = {v.scValType}, bRead = {v.bRead}, bWrite = {v.bWrite}, cVarType = {v.cVarType}, sUnit = {v.sUnit}, sVarName = {v.sVarName}", 0);
 
             // Add the variable in the list
             Vars.Add(v);

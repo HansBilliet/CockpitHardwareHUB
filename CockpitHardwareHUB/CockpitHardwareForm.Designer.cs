@@ -574,7 +574,7 @@ namespace CockpitHardwareHUB
             this.MinimumSize = new System.Drawing.Size(1048, 632);
             this.Name = "CockpitHardwareForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-            this.Text = "Cockpit Hardware HUB";
+            this.Text = "Cockpit Hardware HUB - Version: ";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.CockpitHardwareForm_FormClosed);
             this.Load += new System.EventHandler(this.CockpitHardwareForm_Load);
             this.grpConnect.ResumeLayout(false);

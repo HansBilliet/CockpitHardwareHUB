@@ -10,6 +10,9 @@ namespace CockpitHardwareHUB
 {
     public partial class CockpitHardwareForm : Form
     {
+        // Version
+        private const string sVersion = "0.004 - 11JUL2027";
+
         // Log settings
         private bool _bLoggingEnabled = false;
         private int _iLogLevel = 0;
@@ -57,6 +60,8 @@ namespace CockpitHardwareHUB
             UpdateUI_Devices();
 
             InitializeDataGridViews();
+
+            Text += sVersion;
 
             cbLoggingEnabled.Checked = _bLoggingEnabled;
             cbLogLevel.SelectedIndex = _iLogLevel; // Log level: Low
