@@ -11,10 +11,11 @@ namespace CockpitHardwareHUB
     public partial class CockpitHardwareForm : Form
     {
         // Version
-        private const string sVersion = "0.004 - 11JUL2027";
+        private const string sVersion = "0.005 - 02SEP2027";
 
         // Log settings
         private bool _bLoggingEnabled = false;
+        private bool _bUIRefreshEnabled = true;
         private int _iLogLevel = 0;
         private bool _bLogToFile = false;
         private FileLogger _fileLogger = new FileLogger();
@@ -64,6 +65,7 @@ namespace CockpitHardwareHUB
             Text += sVersion;
 
             cbLoggingEnabled.Checked = _bLoggingEnabled;
+            cbUIRefreshEnabled.Checked = _bUIRefreshEnabled;
             cbLogLevel.SelectedIndex = _iLogLevel; // Log level: Low
             cbLogToFile.Checked = _bLogToFile;
             txtLogFile.Text = _fileLogger.sFileName;
@@ -81,6 +83,9 @@ namespace CockpitHardwareHUB
 
         private void timer_Tick(object sender, EventArgs e)
         {
+            if (_bUIRefreshEnabled == false)
+                return;
+
             UpdateLogger();
 
             if (_SelectedDevice == null)
@@ -442,6 +447,11 @@ namespace CockpitHardwareHUB
         private void cbLoggingEnabled_CheckedChanged(object sender, EventArgs e)
         {
             _bLoggingEnabled = cbLoggingEnabled.Checked;
+        }
+
+        private void cbUIRefreshEnabled_CheckedChanged(object sender, EventArgs e)
+        {
+            _bUIRefreshEnabled = cbUIRefreshEnabled.Checked;
         }
 
         private void btnSendExecCalcCode_Click(object sender, EventArgs e)

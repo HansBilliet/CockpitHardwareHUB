@@ -76,6 +76,7 @@ namespace CockpitHardwareHUB
             this.dgvLogging = new System.Windows.Forms.DataGridView();
             this.btnLoggingClear = new System.Windows.Forms.Button();
             this.cbLoggingEnabled = new System.Windows.Forms.CheckBox();
+            this.cbUIRefreshEnabled = new System.Windows.Forms.CheckBox();
             this.grpConnect.SuspendLayout();
             this.grpDevices.SuspendLayout();
             this.grpExecCalcCode.SuspendLayout();
@@ -454,6 +455,7 @@ namespace CockpitHardwareHUB
             // 
             // grpLogging
             // 
+            this.grpLogging.Controls.Add(this.cbUIRefreshEnabled);
             this.grpLogging.Controls.Add(this.txtLogFile);
             this.grpLogging.Controls.Add(this.cbLogToFile);
             this.grpLogging.Controls.Add(this.lblLoggingLevel);
@@ -558,6 +560,17 @@ namespace CockpitHardwareHUB
             this.cbLoggingEnabled.UseVisualStyleBackColor = true;
             this.cbLoggingEnabled.CheckedChanged += new System.EventHandler(this.cbLoggingEnabled_CheckedChanged);
             // 
+            // cbUIRefreshEnabled
+            // 
+            this.cbUIRefreshEnabled.AutoSize = true;
+            this.cbUIRefreshEnabled.Location = new System.Drawing.Point(438, 16);
+            this.cbUIRefreshEnabled.Name = "cbUIRefreshEnabled";
+            this.cbUIRefreshEnabled.Size = new System.Drawing.Size(77, 17);
+            this.cbUIRefreshEnabled.TabIndex = 24;
+            this.cbUIRefreshEnabled.Text = "UI Refresh";
+            this.cbUIRefreshEnabled.UseVisualStyleBackColor = true;
+            this.cbUIRefreshEnabled.CheckedChanged += new System.EventHandler(this.cbUIRefreshEnabled_CheckedChanged);
+            // 
             // CockpitHardwareForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -644,6 +657,7 @@ namespace CockpitHardwareHUB
         private System.Windows.Forms.ComboBox cbLogLevel;
         private System.Windows.Forms.CheckBox cbLogToFile;
         private System.Windows.Forms.TextBox txtLogFile;
+        private System.Windows.Forms.CheckBox cbUIRefreshEnabled;
         //private CockpitHardwareForm.CustomDataGridView dgvLogging;
     }
 }
