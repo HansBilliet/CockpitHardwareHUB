@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.Ports;
 using System.Text;
 using System.Threading;
@@ -24,14 +23,16 @@ namespace CockpitHardwareHUB
         }
         public Statistics stats = new Statistics();
 
-        private string _path;
+        private string _PNPDeviceID;
         private string _DeviceName;
         private string _ProcessorType;
         private string _uniqueDeviceName;
 
         public List<RegisteredCmd> _RegisteredCmds = new List<RegisteredCmd>();
 
-        private ConcurrentQueue<string> _TxQueue = new ConcurrentQueue<string>();
+        private BlockingCollection<string> _TxQueue = new BlockingCollection<string>();
+        private CancellationTokenSource _src = new CancellationTokenSource();
+
         public bool bTxQueueEmpty { get => (_TxQueue.Count == 0); } 
 
         private Task _RxPump;
@@ -49,12 +50,12 @@ namespace CockpitHardwareHUB
             DeviceServer.SendToMSFS?.Invoke(sCmd, bRegistered);
         }
 
-        public string Path
+        public string PNPDeviceID
         {
-            get => _path;
+            get => _PNPDeviceID;
             set
             {
-                _path = value.ToLower();
+                _PNPDeviceID = value.ToUpper();
             }
         }
 
@@ -67,22 +68,17 @@ namespace CockpitHardwareHUB
             }
         }
 
-        public static string PathToKey(string path)
-        {
-            int i1 = path.IndexOf('#');
-            int i2 = path.LastIndexOf('\\', i1);
-            return path.Substring(i2 + 1).ToLower();
-        }
         public string DeviceName { get => _DeviceName; }
+        
         public string ProcessorType { get => _ProcessorType; }
-        public string Key { get => PathToKey(_path); }
-
-        public COMDevice(string path, string portName, Int32 baudRate = 500000)
+        
+        public COMDevice(string pnpDeviceID, string portName, Int32 baudRate = 500000)
         {
             _serialPort.PortName = portName;
             _serialPort.BaudRate = baudRate;
 
-            Path = path;
+            //Path = path;
+            PNPDeviceID = pnpDeviceID;
 
             _serialPort.Handshake = Handshake.None;
 
@@ -93,7 +89,7 @@ namespace CockpitHardwareHUB
 
             _serialPort.NewLine = "\n";
 
-            _serialPort.ReadTimeout = 100;
+            _serialPort.ReadTimeout = 1000;
             _serialPort.WriteTimeout = 100;
         }
 
@@ -104,97 +100,6 @@ namespace CockpitHardwareHUB
                 stats.cmdRxCnt = 0;
                 stats.cmdTxCnt = 0;
                 stats.nackCnt = 0;
-            }
-        }
-
-        private static IEnumerable<RegistryKey> GetSubKeys(RegistryKey key)
-        {
-            foreach (string keyName in key.GetSubKeyNames())
-                using (var subKey = key.OpenSubKey(keyName))
-                    yield return subKey;
-        }
-
-        // Static helper method to get the Path from a PortName
-        public static string GetPathFromPortName(string PortName)
-        {
-            try
-            {
-                var enumUsbKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Enum\USB");
-                {
-                    if (enumUsbKey == null)
-                        throw new ArgumentNullException("USB", "No enumerable USB devices found in registry");
-                    foreach (var devVID_PID in GetSubKeys(enumUsbKey))
-                    {
-                        foreach (var device in GetSubKeys(devVID_PID))
-                        {
-                            var devParamsKey = device.OpenSubKey("Device Parameters");
-                            if (devParamsKey != null)
-                            {
-                                if (PortName == (string)devParamsKey.GetValue("PortName", ""))
-                                {
-                                    string Path = (string)devParamsKey.GetValue("SymbolicName", "");
-                                    return Path;
-                                }
-                            }
-                        }
-                    }
-                }
-                return "";
-            }
-            catch (Exception ex)
-            {
-                Logger($"GetPathFromPortName Exception: {ex}", 2);
-                return "";
-            }
-        }
-
-        // Static helper method to get the PortName from a Path
-        public static string GetPortNameFromPath(string path)
-        {
-            try
-            {
-                // Path format: "\\?\USB#VID_2341&PID_0042#75834353330351E03212#{a5dcbf10-6530-11d2-901f-00c04fb951ed}"
-
-                // Find "#VID_"
-                int i1 = path.IndexOf("#VID_");
-                if (i1 == -1)
-                    return "";
-
-                // Find next "#"
-                int i2 = path.IndexOf("#", i1 + 1);
-                if (i2 <= i1)
-                    return "";
-
-                // Find next "#"
-                int i3 = path.IndexOf("#", i2 + 1);
-                if (i3 <= i2)
-                    return "";
-
-                // Construct key to find
-                string keyDevice = path.Substring(i1 + 1, i2 - i1 - 1) + "\\" + path.Substring(i2 + 1, i3 - i2 - 1);
-                string PortName = (string)Registry.GetValue($@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB\{keyDevice}\Device Parameters", "PortName", "");
-
-                if ((PortName == null) || (PortName == ""))
-                    return "";
-
-                string SymbolicName = (string)Registry.GetValue($@"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\USB\{keyDevice}\Device Parameters", "SymbolicName", "");
-                if ((SymbolicName == null) || (SymbolicName == ""))
-                    return "";
-
-                i1 = path.IndexOf("USB#VID");
-                i2 = SymbolicName.IndexOf("USB#VID");
-                if (i1 == -1 || i2 == -1)
-                    return "";
-
-                if (path.Substring(i1) != SymbolicName.Substring(i2))
-                    return "";
-
-                return PortName;
-            }
-            catch (Exception ex)
-            {
-                Logger($"GetPortNameFromPath Exception: {ex}", 0);
-                return "";
             }
         }
         
@@ -232,7 +137,11 @@ namespace CockpitHardwareHUB
                 _serialPort.Close();
 
                 Task[] tasks = { _TxPump, _RxPump };
-                return Task.WaitAll(tasks, 100);
+                _src.Cancel(false);
+                Task.WaitAll(tasks, 100);
+                _TxQueue.Dispose();
+                _TxQueue = null;
+                return true;
             }
             catch (Exception ex)
             {
@@ -307,13 +216,11 @@ namespace CockpitHardwareHUB
             var buffer = new byte[1024];
             StringBuilder sbCmd = new StringBuilder("", 256);
 
-            try
+            while (_serialPort.IsOpen)
             {
-                while (_serialPort.IsOpen)
+                try
                 {
-                    if (_serialPort.BytesToRead == 0)
-                        continue;
-
+                    // blocking read
                     int cnt = _serialPort.BaseStream.Read(buffer, 0, 1024);
 
                     for (int i = 0; i < cnt; i++)
@@ -328,7 +235,7 @@ namespace CockpitHardwareHUB
                                 // Command received - check if it has format 'NNN=...' and if it is a RegisteredCmd
                                 string sCmd = sbCmd.ToString();
                                 int iDeviceID = -1;
-                                if ((sCmd.Length >= 4) && (sCmd[3] == '=') && int.TryParse(sCmd.Substring(0,3), out iDeviceID))
+                                if ((sCmd.Length >= 4) && (sCmd[3] == '=') && int.TryParse(sCmd.Substring(0, 3), out iDeviceID))
                                 {
                                     RegisteredCmd RegCmd = _RegisteredCmds.Find(x => x.iDeviceID == iDeviceID);
                                     if (RegCmd != null)
@@ -345,25 +252,23 @@ namespace CockpitHardwareHUB
                             sbCmd.Append((char)buffer[i]);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger($"RxPump {_serialPort.PortName}: Exception {ex}", 0);
+                catch (Exception ex)
+                {
+                    Logger($"RxPump {_serialPort.PortName}: Exception {ex}", 2);
+                }
             }
         }
 
         private void TxPump()
         {
-            try
+            while (_serialPort.IsOpen)
             {
-                while (_serialPort.IsOpen)
+                try
                 {
                     string sCmd;
 
-                    if (_TxQueue.Count == 0)
-                        continue;
-                    else
-                        _TxQueue.TryDequeue(out sCmd);
+                    // blocking take
+                    sCmd = _TxQueue.Take(_src.Token);
 
                     byte[] buffer = Encoding.ASCII.GetBytes($"{sCmd}\n");
 
@@ -389,12 +294,10 @@ namespace CockpitHardwareHUB
                         }
                     }
                 }
-
-                while (_TxQueue.TryDequeue(out _));
-            }
-            catch (Exception ex)
-            {
-                Logger($"RxPump {_serialPort.PortName}: Exception {ex}", 0);
+                catch (Exception ex)
+                {
+                    Logger($"RxPump {_serialPort.PortName}: Exception {ex}", 2);
+                }
             }
         }
 
@@ -429,12 +332,14 @@ namespace CockpitHardwareHUB
                     RegCmd = _RegisteredCmds.Find(x => x.iMSFSID == uUniqueID);
                     if (RegCmd != null)
                     {
-                        _TxQueue.Enqueue($"{RegCmd.iDeviceID:D03}={sData}");
+                        //_TxQueue.Enqueue($"{RegCmd.iDeviceID:D03}={sData}");
+                        _TxQueue.Add($"{RegCmd.iDeviceID:D03}={sData}");
                         Logger($">{_DeviceName}: '=' - MSFSID:{RegCmd.iMSFSID} DeviceID:{RegCmd.iDeviceID} Cmd:{RegCmd.iDeviceID:D03}={sData}", 1);
                     }
                     break;
                 case 'T':
-                    _TxQueue.Enqueue(sData);
+                    //_TxQueue.Enqueue(sData);
+                    _TxQueue.Add(sData);
                     Logger($">{_DeviceName}: 'T' - Cmd:{sData}", 1);
                     break;
                 default:

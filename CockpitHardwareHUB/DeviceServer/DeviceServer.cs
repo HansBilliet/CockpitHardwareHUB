@@ -2,11 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO.Ports;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace CockpitHardwareHUB
 {
@@ -14,7 +11,8 @@ namespace CockpitHardwareHUB
     {
         private static bool _IsStarted = false;
 
-        private static IntPtr _hUsbEventHandle;
+        //private static SerialPortManager _SerialPortManager = new SerialPortManager(0x04D8);
+        private static SerialPortManager _SerialPortManager = new SerialPortManager();
 
         private static Action<string, int> _Logger = null;
         public static Action<string, int> Logger { get => _Logger; }
@@ -26,86 +24,26 @@ namespace CockpitHardwareHUB
 
         private static readonly ConcurrentDictionary<string, COMDevice> _devices = new ConcurrentDictionary<string, COMDevice>();
 
-        // Register to receive USB Raw device Arrival or Deviceremovecomplete messages
-        public static void RegisterForUsbEvents(IntPtr hWnd)
+        private static void OnPortFoundEvent(object sender, SerialPortEventArgs e)
         {
-            var devBroadcastDeviceInterface = new DEV_BROADCAST_DEVICEINTERFACE();
-            var devBroadcastDeviceInterfaceBuffer = IntPtr.Zero;
-
-            try
-            {
-                var size = Marshal.SizeOf(devBroadcastDeviceInterface);
-                devBroadcastDeviceInterface.dbcc_size = size;
-                devBroadcastDeviceInterface.dbcc_devicetype = Constants.DbtDevtypDeviceinterface;
-                devBroadcastDeviceInterface.dbcc_reserved = 0;
-                devBroadcastDeviceInterface.dbcc_classguid = new Guid("a5dcbf10-6530-11d2-901f-00c04fb951ed"); // USB Raw device
-
-                devBroadcastDeviceInterfaceBuffer = Marshal.AllocHGlobal(size);
-                Marshal.StructureToPtr(devBroadcastDeviceInterface, devBroadcastDeviceInterfaceBuffer, true);
-
-                _hUsbEventHandle = User32.RegisterDeviceNotification(hWnd, devBroadcastDeviceInterfaceBuffer, Constants.DeviceNotifyWindowHandle);
-            }
-            catch (Exception ex)
-            {
-                _Logger?.Invoke($"DeviceNotifier.RegisterForUsbEvents() Exception: {ex}", 0);
-                _hUsbEventHandle = IntPtr.Zero;
-            }
-            finally
-            {
-                // Free the memory allocated previously by AllocHGlobal.
-                if (devBroadcastDeviceInterfaceBuffer != IntPtr.Zero)
-                {
-                    try
-                    {
-                        Marshal.FreeHGlobal(devBroadcastDeviceInterfaceBuffer);
-                    }
-                    catch (Exception ex)
-                    {
-                        _Logger?.Invoke($"DeviceNotifier.RegisterForUsbEvents() Exception: {ex}", 0);
-                    }
-                }
-            }
+            COMDevice device = new COMDevice(e.PNPDeviceID, e.DeviceID); // default baudrate is 500000
+            Task.Run(() => AddDevice(device));
+            //AddDevice(device);
+            _Logger?.Invoke($"OnPortFoundEvent {e.DeviceID} VendorID: {e.VendorID} ProductID: {e.ProductID} SerialNr: {e.PNPDeviceID}", 0);
         }
 
-        // Unregister to receive USB Raw device Arrival or Deviceremovecomplete messages
-        public static void UnRegisterForUsbEvents()
+        private static void OnPortRemovedEvent(object sender, SerialPortEventArgs e)
         {
-            User32.UnregisterDeviceNotification(_hUsbEventHandle);
+            RemoveDevice(e.PNPDeviceID);
+            _Logger?.Invoke($"OnPortRemovedEvent {e.DeviceID} VendorID: {e.VendorID} ProductID: {e.ProductID} SerialNr: {e.PNPDeviceID}", 0);
         }
 
-        // WndProc hook to process USB Raw device Arrival or Deviceremovecomplete messages
-        public static void HandleWndProc(ref Message m)
+        private static void OnPortAddedEvent(object sender, SerialPortEventArgs e)
         {
-            // Check if we got a device change message from a USB Raw device
-            if (!_IsStarted || (m.Msg != Constants.WmDevicechange))
-                return;
-
-            // Check if a USB Raw device was inserted or removed
-            Int32 msg = m.WParam.ToInt32();
-            if (msg != Constants.DbtDevicearrival && msg != Constants.DbtDeviceremovecomplete)
-                return;
-
-            // Check if device change is for "Class of devices" (DBT_DEVTYP_DEVICEINTERFACE)
-            var devBroadcastDeviceInterface = new DEV_BROADCAST_DEVICEINTERFACE();
-            Marshal.PtrToStructure(m.LParam, devBroadcastDeviceInterface);
-            if (devBroadcastDeviceInterface.dbcc_devicetype != Constants.DbtDevtypDeviceinterface)
-                return;
-
-            // Process the COMDevice Arrival or Deviceremovecomplete messages
-            switch (msg)
-            {
-                case Constants.DbtDevicearrival:
-                    string PortName = COMDevice.GetPortNameFromPath(devBroadcastDeviceInterface.dbcc_name);
-                    COMDevice device = new COMDevice(devBroadcastDeviceInterface.dbcc_name, PortName); // default baudrate is 500000
-                    Task.Run(() => AddDevice(device));
-                    _Logger?.Invoke($"Devicearrival for {devBroadcastDeviceInterface.dbcc_name}", 0);
-                    break;
-
-                case Constants.DbtDeviceremovecomplete:
-                    RemoveDevice(devBroadcastDeviceInterface.dbcc_name);
-                    _Logger?.Invoke($"Deviceremovecomplete for {devBroadcastDeviceInterface.dbcc_name}", 0);
-                    break;
-            }
+            COMDevice device = new COMDevice(e.PNPDeviceID, e.DeviceID); // default baudrate is 500000
+            Task.Run(() => AddDevice(device));
+            //AddDevice(device);
+            _Logger?.Invoke($"OnPortAddedEvent {e.DeviceID} VendorID: {e.VendorID} ProductID: {e.ProductID} SerialNr: {e.PNPDeviceID}", 0);
         }
 
         // Init DeviceServer
@@ -114,6 +52,11 @@ namespace CockpitHardwareHUB
             _Logger = Logger;
             _SendToMSFS = SendToMSFS;
             _DeviceAddRemove = DeviceAddRemove;
+
+            // Setup event handlers for scanning serial ports
+            _SerialPortManager.OnPortFoundEvent += OnPortFoundEvent;
+            _SerialPortManager.OnPortAddedEvent += OnPortAddedEvent;
+            _SerialPortManager.OnPortRemovedEvent += OnPortRemovedEvent;
         }
 
         // Start DeviceServer
@@ -122,18 +65,10 @@ namespace CockpitHardwareHUB
             if (_IsStarted)
                 return;
 
-            string[] portNames = SerialPort.GetPortNames();
-            string path;
-
-            foreach (string portName in portNames)
-            {
-                path = COMDevice.GetPathFromPortName(portName);
-                if (path != "")
-                {
-                    COMDevice device = new COMDevice(path, portName);
-                    AddDevice(device);
-                }
-            }
+            // start scanning for serial ports
+            // already connected USB devices will be "found"
+            // new connected USB devices will be "added"
+            _SerialPortManager.scanPorts(true);
 
             _IsStarted = true;
         }
@@ -155,9 +90,9 @@ namespace CockpitHardwareHUB
         // Add a COMDevice
         private static void AddDevice(COMDevice device)
         {
-            _Logger?.Invoke($"DeviceServer.AddDevice({device.Path})", 0);
+            _Logger?.Invoke($"DeviceServer.AddDevice({device.PNPDeviceID})", 0);
 
-            if (_devices.ContainsKey(device.Key))
+            if (_devices.ContainsKey(device.PNPDeviceID))
                 return;
 
             if (!device.Open())
@@ -169,10 +104,9 @@ namespace CockpitHardwareHUB
                 _Logger?.Invoke($"DeviceServer.AddDevice(): Try {i}", 0);
                 if (device.Initialize())
                 {
-                    _devices.TryAdd(device.Key, device);
+                    _devices.TryAdd(device.PNPDeviceID, device);
                     device.RegisterCommands();
                     _DeviceAddRemove('+', device);
-                    //_DeviceNotification?.Invoke(device, new NotifyData(NotifyAction.deviceAdded));
                     return;
                 }
                 else
@@ -184,16 +118,15 @@ namespace CockpitHardwareHUB
         }
 
         // Remove a COMDevice
-        private static void RemoveDevice(string path)
+        private static void RemoveDevice(string pnpDeviceID)
         {
-            path = COMDevice.PathToKey(path);
-            _devices.TryGetValue(path, out COMDevice device);
+            //path = COMDevice.PathToKey(path);
+            _devices.TryGetValue(pnpDeviceID, out COMDevice device);
 
-            if (_devices.TryRemove(path, out device))
+            if (_devices.TryRemove(pnpDeviceID, out device))
             {
                 device.Close();
                 _DeviceAddRemove('-', device);
-                //_DeviceNotification?.Invoke(device, new NotifyData(NotifyAction.deviceRemoved));
             }
         }
 
@@ -225,9 +158,9 @@ namespace CockpitHardwareHUB
             return fmgsName;
         }
 
-        public static COMDevice GetDevice(string key)
+        public static COMDevice GetDevice(string pnpDeviceID)
         {
-            if (_devices.TryGetValue(key, out COMDevice device))
+            if (_devices.TryGetValue(pnpDeviceID, out COMDevice device))
                 return device;
             else
                 return null;

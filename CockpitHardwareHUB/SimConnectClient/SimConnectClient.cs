@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.FlightSimulator.SimConnect;
@@ -21,13 +22,13 @@ namespace CockpitHardwareHUB
         private static IntPtr _handle = new IntPtr(0);
 
         // Transmit Pump with its TxQueue
-        private static ConcurrentQueue<string> _TxQueue = new ConcurrentQueue<string>();
+        private static BlockingCollection<string> _TxQueue = new BlockingCollection<string>();
+        private static CancellationTokenSource _src = new CancellationTokenSource();
         private static Task _TxPump;
 
         // Delegates for Inter Module Communication
         private static Action<string, int> _Logger = null;
         private static Action<int, char, string> _SendToDevice = null;
-        //private static Action<string> _SendToDevice = null;
         private static Action<bool> _ConnectStatus = null;
         private static Action<char, string, string> _VariableUpdate = null;
         private static Action<Result> _ExeResult = null;
@@ -149,17 +150,9 @@ namespace CockpitHardwareHUB
             {
                 while (_bConnected)
                 {
-                    string sCmd;
-
-                    if (_TxQueue.Count == 0)
-                        continue;
-                    else
-                        _TxQueue.TryDequeue(out sCmd);
-
+                    string sCmd = _TxQueue.Take(_src.Token);
                     ProcessCmd(sCmd);
                 }
-
-                while (_TxQueue.TryDequeue(out _)) ;
             }
             catch (Exception ex)
             {
@@ -178,7 +171,9 @@ namespace CockpitHardwareHUB
                 _TxPump = Task.Run(() => TxPump());
             else
             {
+                _src.Cancel(false);
                 _TxPump.Wait(100);
+                _TxPump.Dispose();
                 _TxPump = null;
             }
 
@@ -867,8 +862,10 @@ namespace CockpitHardwareHUB
             if (_bConnected)
             {
                 if (bRegistered)
-                    _TxQueue.Enqueue(sCmd);
-                _Logger?.Invoke($">MSFS {sCmd}", 1);
+                {
+                    _TxQueue.Add(sCmd);
+                    _Logger?.Invoke($">MSFS {sCmd}", 1);
+                }
             }
         }
 

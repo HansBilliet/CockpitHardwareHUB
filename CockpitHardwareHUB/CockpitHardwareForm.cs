@@ -11,7 +11,7 @@ namespace CockpitHardwareHUB
     public partial class CockpitHardwareForm : Form
     {
         // Version
-        private const string sVersion = "0.005 - 02SEP2027";
+        private const string sVersion = "0.006 - 14OCT2023";
 
         // Log settings
         private bool _bLoggingEnabled = false;
@@ -50,7 +50,7 @@ namespace CockpitHardwareHUB
         {
             base.OnHandleCreated(e);
 
-            DeviceServer.RegisterForUsbEvents(Handle);
+            //DeviceServer.RegisterForUsbEvents(Handle);
             SimConnectClient.SetHandle(Handle);
         }
 
@@ -204,7 +204,7 @@ namespace CockpitHardwareHUB
 
         private void CockpitHardwareForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            DeviceServer.UnRegisterForUsbEvents();
+            //DeviceServer.UnRegisterForUsbEvents();
             _Timer.Stop();
             _fileLogger.CloseFile();
         }
@@ -212,7 +212,7 @@ namespace CockpitHardwareHUB
         // Override WndProc to install hooks for DeviceServer and SimConnectClient
         protected override void WndProc(ref Message m)
         {
-            DeviceServer.HandleWndProc(ref m);
+            //DeviceServer.HandleWndProc(ref m);
             SimConnectClient.HandleWndProc(ref m);
 
             base.WndProc(ref m);
@@ -288,7 +288,7 @@ namespace CockpitHardwareHUB
             {
                 case '+':
                     string s = $"{Device.DeviceName}";
-                    _DeviceNameToPath.TryAdd(Device.DeviceName, Device.Key);
+                    _DeviceNameToPath.TryAdd(Device.DeviceName, Device.PNPDeviceID);
                     cbDevices.Items.Add(s);
                     cbDevices.SelectedItem = s;
                     UpdateUI_Devices();
@@ -363,8 +363,8 @@ namespace CockpitHardwareHUB
             {
                 lblDeviceNameValue.Text = _SelectedDevice.DeviceName;
                 lblProcessorTypeValue.Text = _SelectedDevice.ProcessorType;
-                string[] path = _SelectedDevice.Path.Split('#');
-                lblDevicePathValue.Text = path[1];
+                //string[] path = _SelectedDevice.Path.Split('#');
+                lblDevicePathValue.Text = _SelectedDevice.PNPDeviceID;
 
                 txtRegisteredVariables.Text = "";
                 foreach (RegisteredCmd command in _SelectedDevice._RegisteredCmds)
