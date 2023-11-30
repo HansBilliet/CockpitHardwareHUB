@@ -38,7 +38,6 @@ namespace CockpitHardwareHUB
         private ConcurrentQueue<LogData> _LogData = new ConcurrentQueue<LogData>();
 
         private COMDevice _SelectedDevice = null;
-        private object debug;
 
         public CockpitHardwareForm()
         {
